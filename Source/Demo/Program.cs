@@ -42,10 +42,26 @@ namespace Demo
             public string Text;
         }
 
-        class Foo : Actor
+        class Foo : MyActorBase
         {
             string On(Bar msg) => $"{msg.Text}, {Id}!";
             void On(Baz msg) => WriteLine(msg.Text + " again!");
+        }
+
+        class MyActorBase : Actor
+        {
+            public override async Task<object> OnReceive(object message)
+            {
+                return await Log(message, base.OnReceive);
+            }
+
+            async Task<object> Log(object message, Func<object, Task<object>> next)
+            {
+                WriteLine($"{Id} received {message.GetType()}");
+                var result = await next(message);
+                WriteLine($"{Id} processed {message.GetType()}");
+                return result;
+            }
         }
     }
 }
