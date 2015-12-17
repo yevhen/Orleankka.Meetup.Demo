@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using static System.Console;
@@ -52,7 +53,7 @@ namespace Demo
         {
             public override async Task<object> OnReceive(object message)
             {
-                return await Log(message, base.OnReceive);
+                return await Log(message, x => Sample(x, base.OnReceive));
             }
 
             async Task<object> Log(object message, Func<object, Task<object>> next)
@@ -60,6 +61,17 @@ namespace Demo
                 WriteLine($"{Id} received {message.GetType()}");
                 var result = await next(message);
                 WriteLine($"{Id} processed {message.GetType()}");
+                return result;
+            }
+
+            async Task<object> Sample(object message, Func<object, Task<object>> next)
+            {
+                var sw = new Stopwatch();
+                sw.Start();
+
+                var result = await next(message);
+                WriteLine($"{Id} did {message.GetType()} in {sw.ElapsedMilliseconds} ms");
+
                 return result;
             }
         }
