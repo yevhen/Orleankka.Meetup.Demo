@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.Dynamic;
 using System.Reflection;
 using System.Threading.Tasks;
 using static System.Console;
@@ -18,7 +19,15 @@ namespace Demo
                 .Register(Assembly.GetExecutingAssembly())
                 .Done();
 
-            Run(system).Wait();
+            try
+            {
+                Run(new ClusterGateway(system)).Wait();
+            }
+            catch (AggregateException e)
+            {
+                WriteLine(e.GetBaseException().Message);
+            }
+
             ReadKey(true);
 
             system.Dispose();
@@ -32,7 +41,7 @@ namespace Demo
 
             await foo.Tell(new Baz {Text = "Hello"});
         }
-
+        
         [Serializable] class Bar : ActorMessage<Foo, string>
         {
             public string Text;
@@ -51,28 +60,58 @@ namespace Demo
 
         class MyActorBase : Actor
         {
-            public override async Task<object> OnReceive(object message)
+            public override Task<object> OnReceive(object message)
             {
-                return await Log(message, x => Sample(x, base.OnReceive));
+                var envelope = (MessageEnvelope) message;
+
+                var user = (string) envelope.Headers["User"];
+                if (user != "admin")
+                    throw new ApplicationException($"Access denied for {user}");
+
+                return base.OnReceive(envelope.Body);
+            }
+        }
+
+        [Serializable] class MessageEnvelope
+        {
+            public IDictionary<string, object> Headers;
+            public object Body;
+        }
+
+        class ClusterGateway : IActorSystem
+        {
+            readonly IActorSystem system;
+
+            public ClusterGateway(IActorSystem system)
+            {
+                this.system = system;
             }
 
-            async Task<object> Log(object message, Func<object, Task<object>> next)
+            public ActorRef ActorOf(Type type, string id) => ActorOf(ActorPath.From(type, id));
+            public ActorRef ActorOf(ActorPath path) => new SecuredActor(system.ActorOf(path));
+            public StreamRef StreamOf(StreamPath path) => system.StreamOf(path);
+            public void Dispose() => system.Dispose();
+        }
+
+        class SecuredActor : ActorRef
+        {
+            readonly ActorRef actor;
+
+            public SecuredActor(ActorRef actor)
+                : base(actor.Path)
             {
-                WriteLine($"{Id} received {message.GetType()}");
-                var result = await next(message);
-                WriteLine($"{Id} processed {message.GetType()}");
-                return result;
+                this.actor = actor;
             }
 
-            async Task<object> Sample(object message, Func<object, Task<object>> next)
+            public override Task Tell(object message) => actor.Tell(Wrap(message));
+            public override Task<TResult> Ask<TResult>(object message) => actor.Ask<TResult>(Wrap(message));
+            public override void Notify(object message) => actor.Notify(Wrap(message));
+
+            static MessageEnvelope Wrap(object message)
             {
-                var sw = new Stopwatch();
-                sw.Start();
-
-                var result = await next(message);
-                WriteLine($"{Id} did {message.GetType()} in {sw.ElapsedMilliseconds} ms");
-
-                return result;
+                var headers = new Dictionary<string, object>();
+                headers["User"] = "some"; // we might get it from HttpContext.Current.User
+                return new MessageEnvelope {Headers = headers, Body = message};
             }
         }
     }
