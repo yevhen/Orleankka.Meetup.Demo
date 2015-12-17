@@ -4,9 +4,6 @@ using System.Threading.Tasks;
 using static System.Console;
 
 using Orleankka;
-using Orleankka.Client;
-using Orleankka.Cluster;
-using Orleankka.Embedded;
 using Orleankka.Playground;
 
 namespace Demo
@@ -28,18 +25,50 @@ namespace Demo
 
         static async Task Run(IActorSystem system)
         {
-            var foo = system.ActorOf<Foo>("world");
-            WriteLine(await foo.Ask<string>(new Bar {Text = "Hello"}));
+            var foo = system.ActorOf<Foo>("#");
+            WriteLine(await foo.Ask<string>("test"));
         }
-        
-        [Serializable] class Bar
-        {
-            public string Text;
-        }
+    }
 
-        class Foo : Actor
+    public class Foo : Actor
+    {
+        public Foo()
+        {}
+
+        public Foo(string id, IActorRuntime runtime)
+            : base(id, runtime)
+        {}
+
+        Task<string> On(string msg)
         {
-            string On(Bar msg) => $"{msg.Text}, {Id}!";
+            var bar = System.ActorOf<Bar>("#");
+
+            var message = new Request
+            {
+                Text = msg,
+                Date = DateTime.UtcNow
+            };
+
+            try
+            {
+                return bar.Ask<string>(message);
+            }
+            catch (ApplicationException)
+            {
+                return Task.FromResult("default");
+            }
         }
+    }
+
+    [Serializable]
+    public class Request
+    {
+        public string Text;
+        public DateTime Date;
+    }
+
+    public class Bar : Actor
+    {
+        string On(Request msg) => $"{Self}: {msg.Text} - {msg.Date}, !";
     }
 }
