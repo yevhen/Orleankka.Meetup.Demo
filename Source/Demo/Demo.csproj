@@ -33,6 +33,34 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Orleankka, Version=0.10.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Orleankka.0.10.10.0\lib\net45\Orleankka.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Orleankka.Core, Version=0.10.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Orleankka.0.10.10.0\lib\net45\Orleankka.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Orleankka.Meta, Version=0.10.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Orleankka.0.10.10.0\lib\net45\Orleankka.Meta.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Orleans, Version=1.0.0.0, Culture=neutral, PublicKeyToken=070f47935e3ed133, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Orleans.Core.1.0.10\lib\net45\Orleans.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OrleansManager, Version=0.10.10.0, Culture=neutral, PublicKeyToken=070f47935e3ed133, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Orleankka.0.10.10.0\lib\net45\OrleansManager.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OrleansProviders, Version=1.0.0.0, Culture=neutral, PublicKeyToken=070f47935e3ed133, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Orleans.OrleansProviders.1.0.10\lib\net45\OrleansProviders.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OrleansRuntime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=070f47935e3ed133, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Orleans.OrleansRuntime.1.0.10\lib\net45\OrleansRuntime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -48,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
