@@ -26,10 +26,6 @@ namespace Demo
 
         static async Task Run(IActorSystem system)
         {
-            var inventory = system.ActorOf<Inventory>("#");
-            await inventory.Tell(new Subscribe {Item = "INV-1"});
-            await inventory.Tell(new Subscribe {Item = "INV-2"});
-
             var item1 = system.StreamOf("sms", "INV-1");
             var item2 = system.StreamOf("sms", "INV-2");
 
@@ -39,31 +35,24 @@ namespace Demo
             await item2.Push(new InventoryItemCreated());
             await item2.Push(new InventoryItemDeactivated());
 
+            var inventory = system.ActorOf<Inventory>("#");
             WriteLine(await inventory.Ask<int>(new Total()));
         }
-        
-        [Serializable] class InventoryItemCreated     {}
-        [Serializable] class InventoryItemRenamed     {}
-        [Serializable] class InventoryItemDeactivated {}
-        
+
+        [Serializable] class InventoryItemCreated { }
+        [Serializable] class InventoryItemRenamed { }
+        [Serializable] class InventoryItemDeactivated { }
+
+        [StreamSubscription(Source = "sms:/INV-([0-9]+)/", Target = "#")]
         public class Inventory : Actor
         {
-            void On(Subscribe x) => System
-                .StreamOf("sms", x.Item)
-                .Subscribe(this);
-
             int total;
             int On(Total x) => total;
 
-            void On(InventoryItemCreated e)     => total++;
+            void On(InventoryItemCreated e) => total++;
             void On(InventoryItemDeactivated e) => total--;
         }
 
-        [Serializable] class Subscribe
-        {
-            public string Item;
-        }
-
-        [Serializable] class Total {}
-    }    
+        [Serializable] class Total { }
+    }
 }
