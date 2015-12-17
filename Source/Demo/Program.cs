@@ -25,12 +25,17 @@ namespace Demo
         static async Task Run(IActorSystem system)
         {
             var foo = system.ActorOf<Foo>("world");
-            Console.WriteLine(await foo.Ask<string>("Hello"));
+            Console.WriteLine(await foo.Ask<string>(new Bar {Text = "Hello"}));
+        }
+
+        [Serializable] class Bar
+        {
+            public string Text;
         }
 
         class Foo : Actor
         {
-            string On(string msg) => $"{msg}, {Id}!";
+            string On(Bar msg) => $"{msg.Text}, {Id}!";
         }
     }
 }
