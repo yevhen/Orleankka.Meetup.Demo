@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using static System.Console;
 
 using Orleankka;
 using Orleankka.Playground;
@@ -17,18 +18,26 @@ namespace Demo
                 .Done();
 
             Run(system).Wait();
-            Console.ReadKey(true);
+            ReadKey(true);
 
             system.Dispose();
         }
 
         static async Task Run(IActorSystem system)
         {
-            var foo = system.ActorOf<Foo>("world");
-            Console.WriteLine(await foo.Ask<string>(new Bar {Text = "Hello"}));
+            var foo = system.TypedActorOf<Foo>("world");
+
+            WriteLine(await foo.Ask(new Bar {Text = "Hello"}));
+
+            await foo.Tell(new Baz {Text = "Hello"});
         }
 
-        [Serializable] class Bar
+        [Serializable] class Bar : ActorMessage<Foo, string>
+        {
+            public string Text;
+        }
+
+        [Serializable] class Baz : ActorMessage<Foo>
         {
             public string Text;
         }
@@ -36,6 +45,7 @@ namespace Demo
         class Foo : Actor
         {
             string On(Bar msg) => $"{msg.Text}, {Id}!";
+            void On(Baz msg) => WriteLine(msg.Text + " again!");
         }
     }
 }
